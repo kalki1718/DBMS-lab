@@ -1,0 +1,287 @@
+4) qtn
+
+create table consistuency(cid varchar(10) primary key,name varchar(10),cs_state varchar(10),no_of_votes varchar(10));
+
+insert into consistuency values('c001','RR Nagar','Karnataka','25');
+insert into consistuency values('c002','Anjanipur','Andra','50');
+insert into consistuency values('c003','Jayanagar','Karnataka','55');
+insert into consistuency values('c004','Rajajinaga','Karnataka','95');
+insert into consistuency values('c005','Hossur','Tamilnadu','90');
+
+select * from consistuency;
+
+create table party(pid varchar(10) primary key,pname varchar(10),symbol varchar(10));
+
+insert into party values('P1','Congress','Flag');
+insert into party values('P2','BJP','Lotus');
+
+select * from party;
+
+
+create table candidate(can_id varchar(10) primary key,name varchar(10),phone varchar(15),age int(3),state varchar(10),pid varchar(10),foreign key(pid) references party(pid));
+insert into candidate values('Can01','Kalil','9147483647',24,'Karnataka','P1');
+insert into candidate values('Can02','Arun','9984678990',34,'Karnataka','P1');
+insert into candidate values('Can03','Nirosh','8854678990',28,'Karanatak','P2');
+insert into candidate values('Can04','Kiran','7147483647',24,'Karnataka','P2');
+
+select * from candidate;
+
+
+
+
+create table voter(vid varchar(10),vname varchar(10),age int(3),address varchar(10),cid varchar(10),can_id varchar(10),foreign key(cid) references consistuency(cid),foreign key(can_id) references candidate(can_id));
+
+insert into voter values('V001','Mounish',24,'Banglore','C001','Can02');
+insert into voter values('V002','Dhanush',22,'Banglore','C001','Can02');
+insert into voter values('V003','Harisha',21,'Banglore','C002','Can03');
+insert into voter values('V004','Deepa',18,'Banglore','C003','Can03');
+insert into voter values('V005','Anila',30,'Banglore','C004','Can01');
+insert into voter values('V006','Akarsh',44,'Banglore','C003','Can04');
+insert into voter values('V005','Bhagya',32,'Banglore','C004','Can02');
+insert into voter values('V006','Greeshma',46,'Banglore','C003','Can04');
+select * from voter;
+
+vid
+vname
+age
+address
+cid
+can_id
+
+V001
+Mounish
+24
+Banglore
+C001
+Can02
+
+V002
+Dhanush
+22
+Banglore
+C001
+Can02
+
+V003
+Harisha
+21
+Banglore
+C002
+Can03
+
+V004
+Deepa
+18
+Banglore
+C003
+Can03
+
+V005
+Anila
+30
+Banglore
+C004
+Can01
+
+V006
+Akarsh
+44
+Banglore
+C003
+Can04
+
+V005
+Bhagya
+32
+Banglore
+C004
+Can02
+
+
+create table contest(cid varchar(10),can_id varchar(10),foreign key(cid) references constituency(cid),foreign key(can_id) references candidate(Can_id));
+
+insert into contest values('C001','Can01');
+insert into contest values('C002','Can02');
+insert into contest values('C002','Can01');
+
+select * from contest;
+
+
+
+Queries:-
+1.List the details of the candidates who are contesting from more than one constituencies which are belongs to different states.
+
+select * from candidate where can_id in(select can_id from contest, consistuency where contest.cid=consistuency.cid group by can_id having count(distinct(cs_state)>1));
+
+can_id
+name
+phone
+age
+state
+pid
+
+Can01
+Kalil
+9147483647
+24
+Karnataka
+P1
+
+Can02
+Arun
+9984678990
+34
+Karnataka
+P1
+
+
+2.Display the state name having maximum number of constituencies.
+
+select cs_state from consistuency group by cs_state having count(cs_state) in(select max(total) from (select count(cs_state) as total from consistuency group by cs_state)as result);
+
+cs_state
+
+Karnataka
+
+
+3.Create a stored procedure to insert the tuple into the voter table by checking the voter age. If voter’s age is at least 18 years old, then insert the tuple into the voter else display the “Not an eligible voter msg”
+
+delimiter //
+mysql> create procedure age_checking(IN vid varchar(10),vname varchar(10),age int(3),address varchar(10),cid varchar(10),can_id varchar(10))
+    -> begin
+    -> declare msg varchar(50);
+    -> if age>18 then
+    -> insert into voter(vid,vname,age,address,cid,can_id)values(vid,vname,age,address,cid,can_id);
+    -> set msg="row inserted...";
+    -> else
+    -> set msg="age less than 18";
+    -> end if;
+    -> select msg;
+    -> end;
+    -> //
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+mysql> call age_checking('V007','RAHUL','20','BIDAR','C003','CAN03');
+    -> //
++-------------------+
+| msg                     |
++-------------------+
+| row inserted... |
++--------------------+
+
+4.Create a stored procedure to display the number_of_voters in the specified constituency. here the constituency name is passed as an argument to the stored procedure.
+
+delimiter //
+mysql> create procedure consname(conname1 varchar(50))
+    -> begin
+    -> select no_of_votes from
+    -> consistuency where name=conname1;
+    -> end //
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> delimiter ;
+mysql> call consname('rr nagar');
++----------------+
+| no_of_votes |
++----------------+
+| 25                   |
++----------------+
+
+5.Create a TRIGGER to UPDATE the count of “ Number_of_voters” of the respective constituency in “CONSTITUENCY” table , AFTER inserting a tuple into the “VOTERS” table.
+
+delimiter //
+mysql> create trigger updt after
+    -> insert on voter for each row
+    -> begin
+    -> update consistuency set
+    -> no_of_votes=no_of_votes+1 where cid=new.cid;
+    -> end //
+Query OK, 0 rows affected (0.03 sec)
+mysql> delimiter ;
+mysql> insert into voter values('V008','NAVEEN',35,'KASARAGOD','C004','CAN03');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT * FROM VOTER;
+
+
+
+
+vid
+vname
+age
+address
+cid
+can_id
+
+V001
+Mounish
+24
+Banglore
+C001
+Can02
+
+V002
+Dhanush
+22
+Banglore
+C001
+Can02
+
+V003
+Harisha
+21
+Banglore
+C002
+Can03
+
+V004
+Deepa
+18
+Banglore
+C003
+Can03
+
+V005
+Anila
+30
+Banglore
+C004
+Can01
+
+V006
+Akarsh
+44
+Banglore
+C003
+Can04
+
+V005
+Bhagya
+32
+Banglore
+C004
+Can02
+
+V006
+Greeshma
+46
+Banglore
+C003
+Can04
+
+V007
+RAHUL
+20
+BIDAR
+C003
+CAN03
+
+V008
+NAVEEN
+35
+KASARAGOD
+C004
+CAN03
+
+
+
