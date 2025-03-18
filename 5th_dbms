@@ -1,0 +1,67 @@
+5) qtn
+
+create table tourist(tid varchar(10) primary key,tname varchar(10),country varchar(10),age int(3));
+
+insert into tourist values('t001','dharshan','india',22);
+insert into tourist values('t002','ajay','india',21);
+insert into tourist values('t003','harish','india',22);
+insert into tourist values('t004','vignesh','india',24);
+
+select * from tourist;
+
+
+create table tourist_place(tpid varchar(10) primary key,tpname varchar(10),state varchar(10),history varchar(10),km int(5));
+
+insert into tourist_place values('tp001','goa','goa','drinks',700);
+insert into tourist_place values('tp002','thirupati','andhra','temple',350);
+insert into tourist_place values('tp003','KGF','karnataka','gold',110);
+insert into tourist_place values('tp004','nandhi','karnataka','hills',90);
+
+select * from tourist_place;
+
+
+
+
+create table visit(tid varchar(10),tpid varchar(10),vdate varchar(20),foreign key(tid) references tourist(tid),foreign key(tpid) references tourist_place(tpid));
+
+insert into visit values('t001','tp001','12-jul-2021');
+insert into visit values('t002','tp001','13-jun-2021');
+insert into visit values('t001','tp003','13-jul-2021');
+insert into visit values('t003','tp003','13-jul-2021');
+insert into visit values('t003','tp004','13-jul-2021');
+insert into visit values('t002','tp003','13-jul-2021');
+insert into visit values('t002','tp002','13-jul-2021');
+
+select * from visit;
+
+
+
+Queries:
+i. List the state name which is having maximum number of tourist places.
+
+select state from tourist_place group by state having count(state)=(select max(total) from (select count(state) as total from tourist_place group by state)as result);
+
+
+ii. List details of Tourist place where maximum number of tourists visited.
+
+select * from tourist_place where tpid in(select tpid from visit group by tpid having count(tpid)=(select max(total) from (select count(tpid) as total from visit group by tpid)as result));
+
+
+
+iii. List the details of tourists visited all tourist places of the state “KARNATAKA”.
+
+select * from tourist where tid in(select tid from visit join tourist_place on visit.tpid=tourist_place.tpid where state='Karnataka' group by tid having count(state) in (select count(state) from tourist_place where state='Karnataka'));
+
+
+
+iv. Display the details of the tourists visited at least one tourist place of the state, but visited all states tourist places.
+
+select * from tourist t where t.tid in(select tid from visit join tourist_place on visit.tpid=tourist_place.tpid group by tid having count(state)=(select count(distinct state) from tourist_place));
+
+
+
+v. Display the details of the tourist place visited by the tourists of all country.
+
+select * from tourist_place where tpid in (select tpid from visit join tourist on visit.tid=tourist.tid group by tpid having count(distinct country)=(select count(distinct country) from tourist));
+
+
