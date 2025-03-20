@@ -7,42 +7,8 @@ insert into team values('T003','AFRICA','GERF','SMITH','PA02');
 insert into team values('T004','AUSTRALIA','DENMARK','SAMMY','PA03');
 insert into team values('T009','KXIP ','PUNJAB','NULL','PB02');
 
-select * from team;
-tid
-tname
-city
-coach
-captain_id
 
-T001
-INDIA
-MUMBAI
-CLARK
-PA01
 
-T002
-PAKISTHAN
-GULF
-MULLA
-PB01
-
-T003
-AFRICA
-GERF
-SMITH
-PA02
-
-T004
-AUSTRALIA
-DENMARK
-SAMMY
-PA03
-
-T009
-KXIP 
-PUNJAB
-NULL
-PB02
 
 
 create table player (pid varchar(10) primary key,  pname varchar(10),  age int(3),  tid varchar(10),  foreign key (tid) references team(tid));
@@ -65,24 +31,6 @@ insert into playerphone1 values('PA03','941563248');
 
 select * from playerphone1;
 
-pid
-phone
-
-PA01
-946572311
-
-PA02
-946117568
-
-PB01
-946532467
-
-PB02
-863451311
-
-PA03
-941563248
-
 
 create table stadium(stid varchar(10) primary key,stname varchar(10),city varchar(10), area varchar(10),pin varchar(6));
 insert into stadium values('S001','INDIA','MUMBAI','SAHPA','509103');
@@ -91,29 +39,6 @@ insert into stadium values('S003','AUSTRALIA','DENMARK','OCEAN','579212');
 
 select * from stadium;
 
-stid
-stname
-city
-area
-pin
-
-S001
-INDIA
-MUMBAI
-SAHPA
-509103
-
-S002
-AFRICA
-GERF
-OCEAN
-579621
-
-S003
-AUSTRALIA
-DENMARK
-OCEAN
-579212
 
 
 create table matches(mid varchar(10) primary key,mdate varchar(10),time int(5),stid varchar(10),tid1 varchar(10),tid2 varchar(10),mom varchar(10),winnerid varchar(10),foreign key(stid) references stadium(stid),foreign key(tid1) references team(tid),foreign key(tid2) references team(tid),foreign key(winnerid) references team(tid),foreign key(mom) references player(pid));
@@ -125,125 +50,25 @@ insert into matches values('M5','29-DEC-16',12,'S001','T004','T002','PB03','T002
 
 select * from matches;
 
-mid
-mdate
-time
-stid
-Tid1
-Tid2
-mom
-winnerid
-
-M1
-11-DEC-16
-3
-S001
-T001
-T002
-PA01
-T001
-
-M2
-16-DEC-16
-4
-S002
-T003
-T001
-PB01
-T003
-
-M3
-24-DEC-16
-12
-S001
-T001
-T003
-PB03
-T001
-
-M4
-25-DEC-16
-10
-S003
-T002
-T003
-PA02
-T002
-
-M5
-29-DEC-16
-12
-S001
-T004
-T002
-PB03
-T002
 
 Queries:-
 i. Display the youngest player (in terms of age) Name, Team name, age in which he belongs of the
 tournament.
 select Tname,Pname,age from team,player where team.Tid=player.Tid and age in(select min(age) from player);
-tname
-pname
-age
-
-AFRICA
-BAHU
-21
 
 
 ii. List the details of the stadium where the maximum number of matches were played.
 select * from stadium where stid in(select stid from matches group by stid having count(stid)=(select max(total) from (select count(stid) as total from matches group by stid) as result));
-stid
-stname
-city
-area
-pin
 
-S001
-INDIA
-MUMBAI
-SAHPA
-509103
 
 
 iii. List the details of the player who is not a captain but got the man_of _match award at least in two
 matches.
 select * from player where pid in(select mom from matches group by mom having count(mom) > 1 and mom not in(select captain_id from team));
-pid
-pname
-age
-tid
 
-PB03
-BAHU
-21
-T003
 
 iv. Display the Team details who won the maximum matches.
 select * from team where tid in(select winnerid from matches group by winnerid having count(winnerid)=(select max(total) from (select count(winnerid) as total from matches group by winnerid) as result));
-tid
-tname
-city
-coach
-captain_id
-
-T001
-INDIA
-MUMBAI
-CLARK
-PA01
-
-T002
-PAKISTHAN
-GULF
-MULLA
-PB01
 
 v. Display the team name where all its won matches played in the same stadium.
 select tname from team where tid in(select winnerid from matches group by winnerid having count(distinct stid)=1);
-tname
-
-INDIA
-
-AFRICA
