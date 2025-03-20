@@ -1,0 +1,84 @@
+4th 
+1)tourist
+  
+   create table tourist(tid varchar(10) primary key,tname varchar(10),country varchar(10), age int(3));
+
+   insert into tourist values('t001','dharshan','India',22);
+
+2}tourist_place
+  
+  create table tourist_place(pid varchar(10) primary key,pname varchar(10),state varchar(10),history varchar(10),km int(5));
+
+  insert into tourist_place14 values('tp001','goa','goa','drinks',700);
+
+3}email 
+
+  create table email(tid varchar(10),email varchar(10),foreign key(tid) references tourist(tid));
+
+  insert into email values('t001','dharshan@gmail.com');
+
+4}visit 
+  create table visit(tid varchar(10),pid varchar(10),date date, foreign key(tid) references tourist(tid),
+foreign key(pid) references tourist_place(pid)); 
+
+  insert into visit values('t001','tp001','12/jul/2015');
+
+a)List the state name which is having the maximum number of tourist places.**
+  
+ SELECT state, COUNT(*) AS tourist_place_count
+ FROM Tourist_Place
+ GROUP BY state
+ ORDER BY tourist_place_count DESC
+ LIMIT 1;
+
+b)List details of the Tourist place where maximum number of tourists visited.
+
+  SELECT tp.*
+ FROM Tourist_Place tp
+ JOIN Visit v ON tp.pid = v.pid
+ GROUP BY tp.pid
+ ORDER BY COUNT(v.tid) DESC
+ LIMIT 1;
+
+c)List the details of tourists who visited all tourist places of the state "KARNATAKA".
+
+  SELECT t.* FROM Tourist t
+ WHERE NOT EXISTS (
+    SELECT tp.pid FROM Tourist_Place tp
+    WHERE tp.state = 'KARNATAKA'
+    AND NOT EXISTS (
+        SELECT v.*
+        FROM Visit v
+        WHERE v.pid = tp.pid
+        AND v.tid = t.tid
+    )
+ );
+
+d)Display the details of the tourists who visited at least one tourist place of the state but visited all states tourist places.
+
+  SELECT t.* FROM Tourist t
+ WHERE EXISTS (
+    SELECT tp.pid
+    FROM Tourist_Place tp
+    WHERE tp.state IN (SELECT DISTINCT state FROM Tourist_Place)
+    AND EXISTS (
+        SELECT v.*
+        FROM Visit v
+        WHERE v.pid = tp.pid
+        AND v.tid = t.tid
+    )
+ );
+
+e)Display the details of the tourist places visited by tourists from all countries.
+
+  SELECT DISTINCT tp.*
+FROM Tourist_Place tp
+JOIN Visit v ON tp.pid = v.pid
+JOIN Tourist t ON v.tid = t.tid;
+
+
+
+  
+  
+
+ 
